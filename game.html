@@ -7,7 +7,7 @@
   <body>
     <script type="text/javascript">
 // Constants
-var GAME = {width: 480, height: 320};
+var GAME = {width: 480, height: 320, dv: 0.2, maxv: 5, minv: -3, dtheta: 1, friction: 0.1};
 
 // Components
 Crafty.c('Actor', {
@@ -35,11 +35,25 @@ Crafty.c('Enemy', {
 
 Crafty.c('PlayerCharacter', {
   init: function() {
+    this.v = 0;
     this.requires('Actor, Keyboard')
       .attr({w: 20, h: 30})
       .onHit('Coin', this.collectCoin).onHit('Enemy', this.hitEnemy)
       .color('blue')
       .bind('EnterFrame', function() {
+      if (this.isDown(Crafty.keys.UP_ARROW)) this.v += GAME.dv;
+      else if (this.isDown(Crafty.keys.DOWN_ARROW)) this.v -= GAME.dv;
+      else if (this.v > 0) this.v = Math.max(this.v-GAME.friction, 0);
+      else if (this.v < 0) this.v = Math.min(this.v+GAME.friction, 0);
+      this.v = Math.min(this.v, GAME.maxv);
+      this.v = Math.max(this.v, GAME.minv);
+      this.x += Math.sin(this._rotation * Math.PI / 180) * this.v;
+      this.y -= Math.cos(this._rotation * Math.PI / 180) * this.v;
+      if (this.isDown(Crafty.keys.LEFT_ARROW))
+        this.rotation -= GAME.dtheta * this.v;
+      else if (this.isDown(Crafty.keys.RIGHT_ARROW))
+        this.rotation += GAME.dtheta * this.v;
+      this.rotation %= 360;
     });
   },
 
