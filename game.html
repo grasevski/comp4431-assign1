@@ -22,6 +22,7 @@ Crafty.c('Coin', {
   },
 
   collect: function() {
+    this.color('orange');
   }
 });
 
@@ -58,6 +59,7 @@ Crafty.c('PlayerCharacter', {
   },
 
   collectCoin: function(data) {
+    for (var i=0; i<data.length; ++i) data[i].obj.collect();
   },
 
   hitEnemy: function(data) {
