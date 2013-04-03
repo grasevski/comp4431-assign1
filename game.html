@@ -7,53 +7,40 @@
   <body>
     <script type="text/javascript">
 // Constants
-var MAP_GRID = {width: 24, height: 16, tile: {width: 16, height: 16}};
-function gameWidth() {return MAP_GRID.width * MAP_GRID.tile.width;}
-function gameHeight() {return MAP_GRID.height * MAP_GRID.tile.height;}
+var GAME = {width: 480, height: 320};
 
 // Components
-Crafty.c('Grid', {
-  init: function() {
-    this.attr({w: MAP_GRID.tile.width, h: MAP_GRID.tile.height});
-  },
-
-  at: function(x, y) {
-    if (x === undefined && y === undefined)
-      return {x: this.x/MAP_GRID.tile.width, y: this.y/MAP_GRID.tile.height};
-    else {
-      this.attr({x: x * MAP_GRID.tile.width, y: y * MAP_GRID.tile.height});
-      return this;
-    }
-  }
-});
-
 Crafty.c('Actor', {
-  init: function() {this.requires('2D, Canvas, Grid');}
+  init: function() {this.requires('2D, Canvas, Color, Collision');}
 });
 
 Crafty.c('Coin', {
-  init: function() {this.requires('Actor, spr_coin');},
+  init: function() {
+    this.requires('Actor')
+      .attr({w: 10, h: 10})
+      .color('yellow');
+  },
 
   collect: function() {
   }
 });
 
 Crafty.c('Enemy', {
-  init: function() {this.requires('Actor, spr_enemy');}
+  init: function() {
+    this.requires('Actor')
+      .attr({w: 10, h: 10})
+      .color('red');
+  }
 });
 
 Crafty.c('PlayerCharacter', {
   init: function() {
-    this.requires('Actor, Keyboard, Collision, spr_player, SpriteAnimation')
-      .bind('EnterFrame', this.move)
+    this.requires('Actor, Keyboard')
+      .attr({w: 20, h: 30})
       .onHit('Coin', this.collectCoin).onHit('Enemy', this.hitEnemy)
-      .animate('PlayerAccelerating', 0, 0, 2)
-      .animate('PlayerReversing', 0, 1, 2)
-      .animate('PlayerTurningLeft', 0, 2, 2)
-      .animate('PlayerTurningRight', 0, 3, 2);
-  },
-
-  move: function() {
+      .color('blue')
+      .bind('EnterFrame', function() {
+    });
   },
 
   collectCoin: function(data) {
@@ -67,13 +54,12 @@ Crafty.c('PlayerCharacter', {
 // Scenes
 Crafty.scene('Loading', function() {
   Crafty.e('2D, DOM, Text')
-    .text('Loading; please wait...')
-    .attr({x: 0, y: gameHeight()/2 - 24, w: gameWidth()});
+    .text('Loading; please wait...');
   Crafty.load(['sprites.png',
     'coin.mp3', 'enemy.mp3', 'player.mp3', 'bg.mp3'], function() {
-    /*Crafty.sprite(16, 'sprites.png', {
-      spr_coin: [0, 2], spr_enemy; [0, 4], spr_player: [0, 7]
-    });*/
+    //Crafty.sprite(16, 'sprites.png', {
+    //  spr_coin: [0, 2], spr_enemy; [0, 4], spr_player: [0, 7]
+    //});
     Crafty.audio.add({bg: 'bg.mp3',
       coin: 'coin.mp3', enemy: 'enemy.mp3', player: 'player.mp3'});
     Crafty.audio.play('bg', -1);
@@ -83,21 +69,22 @@ Crafty.scene('Loading', function() {
 
 Crafty.scene('Game', function() {
   //Crafty.background("url('bg.png')");
-  Crafty.e('PlayerCharacter').at(5, 5);
-  for (var x=0; x<MAP_GRID.width; ++x) {
-    Crafty.e('Enemy').at(x, 0);
-    Crafty.e('Enemy').at(x, MAP_GRID.height-1);
-  }
-  for (var y=0; y<MAP_GRID.height; ++y) {
-    Crafty.e('Enemy').at(0, y);
-    Crafty.e('Enemy').at(MAP_GRID.width-1, y);
-  }
-  for (var x=1; x<MAP_GRID.width-1; ++x) {
-    for (var y=1; y<MAP_GRID.height-1; ++y) {
-      if (x == 5 && y == 5) continue;
-      var r = Math.random();
-      if (r < 0.3) Crafty.e('Coin').at(x, y);
-      else if (r < 0.4) Crafty.e('Enemy').at(x, y);
+  var w = GAME.width, h = GAME.height;
+  var e = Crafty.e('PlayerCharacter');
+  e.attr({x: Math.random() * (w-e.w), y: Math.random() * (h-e.h)});
+  while (Math.random() < 0.9) {
+    if (Math.random() < 0.9) {
+      e = Crafty.e('Coin');
+      e.attr({x: Math.random() * (w-e.w),
+              y: Math.random() * (h-e.h)});
+      if (e.hit('Coin') || e.hit('Enemy') || e.hit('PlayerCharacter'))
+        e.destroy();
+    } else {
+      e = Crafty.e('Enemy');
+      e.attr({x: Math.random() * (w-e.w),
+              y: Math.random() * (h-e.h)});
+      if (e.hit('Coin') || e.hit('Enemy') || e.hit('PlayerCharacter'))
+        e.destroy();
     }
   }
 });
@@ -110,7 +97,7 @@ Crafty.scene('Defeat', function() {
 
 
 // Game
-Crafty.init(gameWidth(), gameHeight());
+Crafty.init(GAME.width, GAME.height);
 Crafty.background('green');
 Crafty.scene('Loading');
     </script>
