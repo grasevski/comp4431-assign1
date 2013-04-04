@@ -11,7 +11,7 @@ var GAME = {width: 640, height: 480, dv: 0.2, maxv: 5, minv: -3, dtheta: 1, fric
 
 // Components
 Crafty.c('Actor', {
-  init: function() {this.requires('2D, Canvas, Color, Collision, WiredHitBox');}
+  init: function() {this.requires('2D, Canvas, Color, Collision');}
 });
 
 Crafty.c('Coin', {
@@ -78,6 +78,8 @@ Crafty.c('PlayerCharacter', {
 
   hitEnemy: function(data) {
     this.v = -this.v;
+    this.x += Math.sin(this._rotation * Math.PI / 180) * this.v;
+    this.y -= Math.cos(this._rotation * Math.PI / 180) * this.v;
   }
 });
 
