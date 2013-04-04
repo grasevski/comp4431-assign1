@@ -7,11 +7,11 @@
   <body>
     <script type="text/javascript">
 // Constants
-var GAME = {width: 640, height: 480, dv: 0.2, maxv: 5, minv: -3, dtheta: 1, friction: 0.1};
+var GAME = {width: 640, height: 480, dv: 0.2, maxv: 5, minv: -3, dtheta: 5, friction: 0.1};
 
 // Components
 Crafty.c('Actor', {
-  init: function() {this.requires('2D, Canvas, Color, Collision');}
+  init: function() {this.requires('2D, Canvas, Color');}
 });
 
 Crafty.c('Coin', {
@@ -20,7 +20,7 @@ Crafty.c('Coin', {
     this.dy = 0;
     this.requires('Actor')
       .attr({w: 10, h: 10})
-      .onHit('Enemy', this.hitEnemy)
+      .requires('Collision').onHit('Enemy', this.hitEnemy)
       .color('yellow')
       .bind('EnterFrame', function() {
       if (this.color() == 'orange') return;
@@ -51,24 +51,28 @@ Crafty.c('Enemy', {
 Crafty.c('PlayerCharacter', {
   init: function() {
     this.v = 0;
+    this.turningDirection = 0;
     this.requires('Actor, Keyboard')
       .attr({w: 20, h: 30, z: 1})
-      .onHit('Coin', this.collectCoin).onHit('Enemy', this.hitEnemy)
+      .origin('center')
+      .requires('Collision').onHit('Coin', this.collectCoin).onHit('Enemy', this.hitEnemy)
       .color('blue')
       .bind('EnterFrame', function() {
       if (this.isDown(Crafty.keys.UP_ARROW)) this.v += GAME.dv;
       else if (this.isDown(Crafty.keys.DOWN_ARROW)) this.v -= GAME.dv;
       else if (this.v > 0) this.v = Math.max(this.v-GAME.friction, 0);
       else if (this.v < 0) this.v = Math.min(this.v+GAME.friction, 0);
-      this.v = Math.min(this.v, GAME.maxv);
-      this.v = Math.max(this.v, GAME.minv);
-      this.x += Math.sin(this._rotation * Math.PI / 180) * this.v;
-      this.y -= Math.cos(this._rotation * Math.PI / 180) * this.v;
-      if (this.isDown(Crafty.keys.LEFT_ARROW))
-        this.rotation -= GAME.dtheta * this.v;
+      this.v = Math.max(Math.min(this.v, GAME.maxv), GAME.minv);
+      this.x += Math.sin(this._rotation * Math.PI/180) * this.v;
+      this.y -= Math.cos(this._rotation * Math.PI/180) * this.v;
+      if (this.v == 0) this.turningDirection = 0;
+      else if (this.isDown(Crafty.keys.LEFT_ARROW))
+        this.turningDirection = -1;
       else if (this.isDown(Crafty.keys.RIGHT_ARROW))
-        this.rotation += GAME.dtheta * this.v;
-      this.rotation %= 360;
+        this.turningDirection = 1;
+      else this.turningDirection = 0;
+      if (this.v < 0) this.turningDirection *= -1;
+      this.rotation = (this.rotation + this.turningDirection*GAME.dtheta) % 360;
     });
   },
 
@@ -77,9 +81,10 @@ Crafty.c('PlayerCharacter', {
   },
 
   hitEnemy: function(data) {
-    this.v = -this.v;
-    this.x += Math.sin(this._rotation * Math.PI / 180) * this.v;
-    this.y -= Math.cos(this._rotation * Math.PI / 180) * this.v;
+    this.rotation -= this.turningDirection * GAME.dtheta;
+    this.x -= Math.sin(this._rotation * Math.PI/180) * this.v;
+    this.y += Math.cos(this._rotation * Math.PI/180) * this.v;
+    this.v = 0;
   }
 });
 
@@ -105,7 +110,7 @@ Crafty.scene('Game', function() {
   var w = GAME.width, h = GAME.height;
   var e = Crafty.e('PlayerCharacter');
   e.attr({x: Math.random() * (w-e.w), y: Math.random() * (h-e.h)});
-  while (Math.random() < 0.99) {
+  while (Math.random() < 0.9) {
     if (Math.random() < 0.9) {
       e = Crafty.e('Coin');
       e.attr({x: Math.random() * (w-e.w),
