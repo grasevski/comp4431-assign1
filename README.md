@@ -42,9 +42,11 @@ Mechanics
 
 Dynamics
 --------
-Discuss the dynamics that come out of game play. How are they grounded in the mechanics? What effect do they have on the player?
-
-The main dynamics of the game are
+This game has several dynamics:
+* Driving - the player controls a car which somewhat simulates an RL car that one would drive. This presents the player with some of the challenges of driving, i.e. steering, speed and so on.
+* Dodging - the player controls the car in such a manner so as to avoid colliding with the obstacles (with which colliding would cause eventual death). This adds more challenge and drama, as the player has to speed around whilst avoiding these obstacles. This presents somewhat of an economic drama, e.g. is it worth driving at full speed into a wall to squash the pedestrian.
+* Chasing - the player has to chase the pedestrians, who are trying to avoid death. This unwillingness of the pedestrians to be run over creates a sense of drama in that the player has to kill them against their will.
+* Herding - it is usually easier to herd the people together (which to some extent they naturally do when left unthreatened) so that they can be defeated in batch, swiftly. This adds a tactical/strategic element to the game, where the player will attempt to collect the people together so that they can speed over them all in one go.
 
 Improvements
 ------------
