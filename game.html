@@ -7,7 +7,7 @@
   <body>
     <script type="text/javascript">
 // Constants
-var GAME = {width: 640, height: 480, dv: 0.2, maxv: 5, minv: -3, dtheta: 5, friction: 0.1};
+var GAME = {width: 480, height: 320, dv: 0.2, maxv: 5, minv: -3, dtheta: 5, friction: 0.1};
 
 // Components
 Crafty.c('Actor', {
@@ -110,7 +110,7 @@ Crafty.scene('Game', function() {
   var w = GAME.width, h = GAME.height;
   var e = Crafty.e('PlayerCharacter');
   e.attr({x: Math.random() * (w-e.w), y: Math.random() * (h-e.h)});
-  while (Math.random() < 0.9) {
+  while (Math.random() < 0.99) {
     if (Math.random() < 0.9) {
       e = Crafty.e('Coin');
       e.attr({x: Math.random() * (w-e.w),
