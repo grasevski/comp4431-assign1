@@ -3,7 +3,7 @@ comp4431-assign1
 
 Assignment 1: Sensation, Challenge, Drama
 
-My game is called "Michael Caine Grand Prix".
+My game is called "Michael Caine Racing".
 
 Storyboards
 -----------
@@ -34,11 +34,17 @@ What dramatic arc are you trying to achieve in your game? What kind of pacing? I
 
 Mechanics
 ---------
-Describe the mechanics of your game in detail. Justify your mechanics in terms of how they achieve your stated design goals.
+"Michael Caine Racing" implements the core mechanics for this assignment as such:
+* The player controls a car using the directional keys. Up accelerates, down brakes/reverses, left turns left and right turns right. The car follows iconic oversimplified Newtonian mechanics, in that it can accelerate, it rebounds off lamp posts, and it slows down over time when it is coasting. The choice of the directional keys was an obvious one for us, because it is simple, portable (accessible across different languages, keyboard layouts, etc), and somewhat intuitive. We could have perhaps gone with another control scheme for example a left and right key next to each other, then separately had accelerate and brake/reverse as two other keys. This arguably is conceptually closer to the controls of a real world vehicle, however we decided against this in the name of simplicity and portability. This control scheme allows the player to play with one hand, perhaps allowing them to be more relaxed.
+* The object of the game is to run over pedestrians i.e. "good" things, which run away from you and try to avoid being run over. It was hoped that the drama of having the pedestrians run away from their impending doom would engage the player and encourage them to follow through with their duties with the sense of satisfaction that comes with an inevitable victory.
+* There are objects to avoid (i.e. "bad" objects) such as lampposts which damage your car. These are generally inanimate. The idea behind this was that the player would be their own worst enemy, and this would hopefully add to the irony of the game and add an extra dimension to the drama. We could have had intelligent adversaries which chased you down, but this seemed unnatural, c.f. the "police" in Driver that ram into your car until it is destroyed rather than pulling you over, as the background story would suggest.
+* The overall objective is to run over all the people within a time limit without totalling your car. Failing to complete this results in "Game Over", with the option to restart. Each time the player succeeds, they are challenged with a progressively harder level. This progression of levels was intended to help the player achieve flow, in that as they become more confident at the game it becomes progressively harder, so that ideally the relative level of difficulty consistently facilitates flow.
 
 Dynamics
 --------
 Discuss the dynamics that come out of game play. How are they grounded in the mechanics? What effect do they have on the player?
+
+The main dynamics of the game are
 
 Improvements
 ------------
