@@ -11,14 +11,32 @@ var GAME = {width: 640, height: 480, dv: 0.2, maxv: 5, minv: -3, dtheta: 1, fric
 
 // Components
 Crafty.c('Actor', {
-  init: function() {this.requires('2D, Canvas, Color, Collision');}
+  init: function() {this.requires('2D, Canvas, Color, Collision, WiredHitBox');}
 });
 
 Crafty.c('Coin', {
   init: function() {
+    this.dx = 0;
+    this.dy = 0;
     this.requires('Actor')
       .attr({w: 10, h: 10})
-      .color('yellow');
+      .onHit('Enemy', this.hitEnemy)
+      .color('yellow')
+      .bind('EnterFrame', function() {
+      if (this.color() == 'orange') return;
+      this.dx = this.dy = 0;
+      if (Math.random() < 0.5) ++this.dx;
+      if (Math.random() < 0.5) --this.dx;
+      if (Math.random() < 0.5) ++this.dy;
+      if (Math.random() < 0.5) --this.dy;
+      this.x += this.dx;
+      this.y += this.dy;
+    });
+  },
+
+  hitEnemy: function() {
+    this.x -= this.dx;
+    this.y -= this.dy;
   }
 });
 
@@ -34,7 +52,7 @@ Crafty.c('PlayerCharacter', {
   init: function() {
     this.v = 0;
     this.requires('Actor, Keyboard')
-      .attr({w: 20, h: 30})
+      .attr({w: 20, h: 30, z: 1})
       .onHit('Coin', this.collectCoin).onHit('Enemy', this.hitEnemy)
       .color('blue')
       .bind('EnterFrame', function() {
@@ -59,6 +77,7 @@ Crafty.c('PlayerCharacter', {
   },
 
   hitEnemy: function(data) {
+    this.v = -this.v;
   }
 });
 
@@ -84,7 +103,7 @@ Crafty.scene('Game', function() {
   var w = GAME.width, h = GAME.height;
   var e = Crafty.e('PlayerCharacter');
   e.attr({x: Math.random() * (w-e.w), y: Math.random() * (h-e.h)});
-  while (Math.random() < 0.999) {
+  while (Math.random() < 0.99) {
     if (Math.random() < 0.9) {
       e = Crafty.e('Coin');
       e.attr({x: Math.random() * (w-e.w),
