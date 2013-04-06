@@ -158,7 +158,7 @@ Crafty.scene('Loading', function() {
   Crafty.e('2D, DOM, Text')
     .text('Loading; please wait...');
   Crafty.audio.add('bg', 'bg.mp3');
-  Crafty.audio.play('bg');
+  Crafty.audio.play('bg', -1);
   Crafty.scene('Game');
 });
 
