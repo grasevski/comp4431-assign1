@@ -9,13 +9,16 @@
 // Constants
 var GAME = {width: 480,
             height: 320,
-            dv: 0.2,
-            maxv: 5,
-            minv: -3,
-            dtheta: 5,
+            dv: 0.1,
+            maxv: 2,
+            minv: -1,
+            dtheta: 3,
             friction: 0.1,
-            decay: 0.5,
+            decay: 0.1,
+            coin: {threshold: 5555, speed: 0.2},
             enemy: {width: 10, height: 10}};
+
+var player;
 
 // Helpers
 function getRandomArbitrary(min, max) {
@@ -41,11 +44,35 @@ Crafty.c('Coin', {
       .color('yellow')
       .bind('EnterFrame', function() {
       if (this.color() == 'orange') return;
-      this.dx = this.dy = 0;
-      if (Math.random() < 0.5) ++this.dx;
-      if (Math.random() < 0.5) --this.dx;
-      if (Math.random() < 0.5) ++this.dy;
-      if (Math.random() < 0.5) --this.dy;
+      if (Math.pow(player.x - this.x, 2) + Math.pow(player.y - this.y, 2) < GAME.coin.threshold) {
+        if (this.x > player.x) this.dx = GAME.coin.speed;
+        else if (this.x < player.x) this.dx = -GAME.coin.speed;
+        else this.dx = 0;
+        if (this.y > player.y) this.dy = GAME.coin.speed;
+        else if (this.y < player.y) this.dy = -GAME.coin.speed;
+        else this.dy = 0;
+      } else {
+        if (this.dx > 0 && Math.random() < 0.1) {
+          if (Math.random() < 0.5) this.dx = -GAME.coin.speed;
+          else this.dx = 0;
+        } else if (this.dx < 0 && Math.random() < 0.1) {
+          if (Math.random() < 0.5) this.dx = GAME.coin.speed;
+          else this.dx = 0;
+        } else if (Math.random() < 0.1) {
+          if (Math.random() < 0.5) this.dx = GAME.coin.speed;
+          else this.dx = -GAME.coin.speed;
+        }
+        if (this.dy > 0 && Math.random() < 0.1) {
+          if (Math.random() < 0.5) this.dy = -GAME.coin.speed;
+          else this.dy = 0;
+        } else if (this.dy < 0 && Math.random() < 0.1) {
+          if (Math.random() < 0.5) this.dy = GAME.coin.speed;
+          else this.dy = 0;
+        } else if (Math.random() < 0.1) {
+          if (Math.random() < 0.5) this.dy = GAME.coin.speed;
+          else this.dy = -GAME.coin.speed;
+        }
+      }
       this.x += this.dx;
       this.y += this.dy;
     });
@@ -71,13 +98,13 @@ Crafty.c('PlayerCharacter', {
     this.v = 0;
     this.turningDirection = 0;
     this.coinsRemaining = -1;
-    this.hp = 10;
+    this.hp = 100;
     this.requires('Actor, Keyboard')
       .attr({w: 20, h: 30, z: 1})
       .origin('center')
       .requires('Collision')
       .onHit('Coin', this.collectCoin).onHit('Enemy', this.hitEnemy)
-      .color('rgb(0, 0, ' + 10*this.hp + ')')
+      .color('rgb(0, 0, ' + this.hp + ')')
       .bind('EnterFrame', function() {
       if (this.isDown(Crafty.keys.UP_ARROW)) this.v += GAME.dv;
       else if (this.isDown(Crafty.keys.DOWN_ARROW)) this.v -= GAME.dv;
@@ -112,9 +139,16 @@ Crafty.c('PlayerCharacter', {
     this.rotation -= this.turningDirection * GAME.dtheta;
     this.x -= Math.sin(this._rotation * Math.PI/180) * this.v;
     this.y += Math.cos(this._rotation * Math.PI/180) * this.v;
+    this.hp -= Math.ceil(Math.abs(this.v));
     this.v *= -GAME.decay;
-    this.color('rgb(0, 0, ' + 10*--this.hp + ')');
+    this.hp = Math.max(this.hp, 0);
+    this.color('rgb(0, 0, ' + this.hp + ')');
     if (!this.hp) Crafty.scene('Defeat');
+  },
+
+  resetHp: function() {
+    this.hp = 100;
+    this.color('rgb(0, 0, ' + this.hp + ')');
   }
 });
 
@@ -123,20 +157,12 @@ Crafty.c('PlayerCharacter', {
 Crafty.scene('Loading', function() {
   Crafty.e('2D, DOM, Text')
     .text('Loading; please wait...');
-  Crafty.load(['sprites.png',
-    'coin.mp3', 'enemy.mp3', 'player.mp3', 'bg.mp3'], function() {
-    //Crafty.sprite(16, 'sprites.png', {
-    //  spr_coin: [0, 2], spr_enemy; [0, 4], spr_player: [0, 7]
-    //});
-    Crafty.audio.add({bg: 'bg.mp3',
-      coin: 'coin.mp3', enemy: 'enemy.mp3', player: 'player.mp3'});
-    Crafty.audio.play('bg', -1);
-    Crafty.scene('Game');
-  });
+  Crafty.audio.add('bg', 'bg.mp3');
+  Crafty.audio.play('bg');
+  Crafty.scene('Game');
 });
 
 Crafty.scene('Game', function() {
-  //Crafty.background("url('bg.png')");
   var w = GAME.enemy.width, h = GAME.enemy.height;
   var numActors = GAME.width/w, numCoins = 0;
   for (var i=0; i<numActors; ++i) {
@@ -150,9 +176,10 @@ Crafty.scene('Game', function() {
   }
   var xmin = w, xmax = GAME.width - 2*w;
   var ymin = h, ymax = GAME.height - 2*h;
-  var p = Crafty.e('PlayerCharacter')
-    .attr({x: getRandomInt(xmin, xmax),
-           y: getRandomInt(ymin, ymax)});
+  player = Crafty.e('PlayerCharacter');
+  player.attr({x: getRandomInt(xmin, xmax - player.w),
+               y: getRandomInt(ymin, ymax - player.h)});
+  player.resetHp();
   numActors = 44;
   for (var i=0; i<numActors; ++i) {
     var e = Crafty.e('Coin')
@@ -162,8 +189,8 @@ Crafty.scene('Game', function() {
       e.destroy();
     else ++numCoins;
   }
-  p.attr({coinsRemaining: numCoins});
-  numActors /= 4;
+  player.attr({coinsRemaining: numCoins});
+  numActors /= 8;
   for (var i=0; i<numActors; ++i) {
     var e = Crafty.e('Enemy')
       .attr({x: getRandomInt(xmin, xmax),
