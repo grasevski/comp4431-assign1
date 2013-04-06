@@ -7,7 +7,24 @@
   <body>
     <script type="text/javascript">
 // Constants
-var GAME = {width: 480, height: 320, dv: 0.2, maxv: 5, minv: -3, dtheta: 5, friction: 0.1};
+var GAME = {width: 480,
+            height: 320,
+            dv: 0.2,
+            maxv: 5,
+            minv: -3,
+            dtheta: 5,
+            friction: 0.1,
+            decay: 0.5,
+            enemy: {width: 10, height: 10}};
+
+// Helpers
+function getRandomArbitrary(min, max) {
+  return Math.random() * (max - min) + min;
+}
+
+function getRandomInt(min, max) {
+  return Math.floor(Math.random() * (max - min + 1)) + min;
+}
 
 // Components
 Crafty.c('Actor', {
@@ -43,7 +60,8 @@ Crafty.c('Coin', {
 Crafty.c('Enemy', {
   init: function() {
     this.requires('Actor')
-      .attr({w: 10, h: 10})
+      .attr({w: GAME.enemy.width, h: GAME.enemy.height})
+      .requires('Collision')
       .color('red');
   }
 });
@@ -52,11 +70,14 @@ Crafty.c('PlayerCharacter', {
   init: function() {
     this.v = 0;
     this.turningDirection = 0;
+    this.coinsRemaining = -1;
+    this.hp = 10;
     this.requires('Actor, Keyboard')
       .attr({w: 20, h: 30, z: 1})
       .origin('center')
-      .requires('Collision').onHit('Coin', this.collectCoin).onHit('Enemy', this.hitEnemy)
-      .color('blue')
+      .requires('Collision')
+      .onHit('Coin', this.collectCoin).onHit('Enemy', this.hitEnemy)
+      .color('rgb(0, 0, ' + 10*this.hp + ')')
       .bind('EnterFrame', function() {
       if (this.isDown(Crafty.keys.UP_ARROW)) this.v += GAME.dv;
       else if (this.isDown(Crafty.keys.DOWN_ARROW)) this.v -= GAME.dv;
@@ -77,14 +98,23 @@ Crafty.c('PlayerCharacter', {
   },
 
   collectCoin: function(data) {
-    for (var i=0; i<data.length; ++i) data[i].obj.color('orange');
+    for (var i=0; i<data.length; ++i) {
+      if (data[i].obj.color() == 'yellow') {
+        data[i].obj.color('orange');
+        ++this.collected;
+        --this.coinsRemaining;
+      }
+    }
+    if (!this.coinsRemaining) Crafty.scene('Victory');
   },
 
   hitEnemy: function(data) {
     this.rotation -= this.turningDirection * GAME.dtheta;
     this.x -= Math.sin(this._rotation * Math.PI/180) * this.v;
     this.y += Math.cos(this._rotation * Math.PI/180) * this.v;
-    this.v = 0;
+    this.v *= -GAME.decay;
+    this.color('rgb(0, 0, ' + 10*--this.hp + ')');
+    if (!this.hp) Crafty.scene('Defeat');
   }
 });
 
@@ -107,30 +137,48 @@ Crafty.scene('Loading', function() {
 
 Crafty.scene('Game', function() {
   //Crafty.background("url('bg.png')");
-  var w = GAME.width, h = GAME.height;
-  var e = Crafty.e('PlayerCharacter');
-  e.attr({x: Math.random() * (w-e.w), y: Math.random() * (h-e.h)});
-  while (Math.random() < 0.99) {
-    if (Math.random() < 0.9) {
-      e = Crafty.e('Coin');
-      e.attr({x: Math.random() * (w-e.w),
-              y: Math.random() * (h-e.h)});
-      if (e.hit('Coin') || e.hit('Enemy') || e.hit('PlayerCharacter'))
-        e.destroy();
-    } else {
-      e = Crafty.e('Enemy');
-      e.attr({x: Math.random() * (w-e.w),
-              y: Math.random() * (h-e.h)});
-      if (e.hit('Coin') || e.hit('Enemy') || e.hit('PlayerCharacter'))
-        e.destroy();
-    }
+  var w = GAME.enemy.width, h = GAME.enemy.height;
+  var numActors = GAME.width/w, numCoins = 0;
+  for (var i=0; i<numActors; ++i) {
+    Crafty.e('Enemy').attr({x: w*i, y: 0});
+    Crafty.e('Enemy').attr({x: w*i, y: GAME.height-h});
+  }
+  numActors = GAME.height/h;
+  for (var i=1; i<numActors-1; ++i) {
+    Crafty.e('Enemy').attr({x: 0, y: h*i});
+    Crafty.e('Enemy').attr({x: GAME.width-w, y: h*i});
+  }
+  var xmin = w, xmax = GAME.width - 2*w;
+  var ymin = h, ymax = GAME.height - 2*h;
+  var p = Crafty.e('PlayerCharacter')
+    .attr({x: getRandomInt(xmin, xmax),
+           y: getRandomInt(ymin, ymax)});
+  numActors = 44;
+  for (var i=0; i<numActors; ++i) {
+    var e = Crafty.e('Coin')
+      .attr({x: getRandomInt(xmin, xmax),
+             y: getRandomInt(ymin, ymax)});
+    if (e.hit('Coin') || e.hit('Enemy') || e.hit('PlayerCharacter'))
+      e.destroy();
+    else ++numCoins;
+  }
+  p.attr({coinsRemaining: numCoins});
+  numActors /= 4;
+  for (var i=0; i<numActors; ++i) {
+    var e = Crafty.e('Enemy')
+      .attr({x: getRandomInt(xmin, xmax),
+             y: getRandomInt(ymin, ymax)});
+    if (e.hit('Coin') || e.hit('Enemy') || e.hit('PlayerCharacter'))
+      e.destroy();
   }
 });
 
 Crafty.scene('Victory', function() {
+  Crafty.scene('Game');
 });
 
 Crafty.scene('Defeat', function() {
+  Crafty.scene('Game');
 });
 
 
