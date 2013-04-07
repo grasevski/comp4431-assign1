@@ -15,10 +15,12 @@ var GAME = {width: 480,
             dtheta: 3,
             friction: 0.1,
             decay: 0.1,
-            coin: {threshold: 5555, speed: 0.2},
+            coin: {threshold: 5555, walkingSpeed: 0.2, runningSpeed: 0.4},
             enemy: {width: 10, height: 10}};
 
+// Globals
 var player;
+var difficulty = 1;
 
 // Helpers
 function getRandomArbitrary(min, max) {
@@ -45,32 +47,32 @@ Crafty.c('Coin', {
       .bind('EnterFrame', function() {
       if (this.color() == 'orange') return;
       if (Math.pow(player.x - this.x, 2) + Math.pow(player.y - this.y, 2) < GAME.coin.threshold) {
-        if (this.x > player.x) this.dx = GAME.coin.speed;
-        else if (this.x < player.x) this.dx = -GAME.coin.speed;
+        if (this.x > player.x) this.dx = GAME.coin.runningSpeed;
+        else if (this.x < player.x) this.dx = -GAME.coin.runningSpeed;
         else this.dx = 0;
-        if (this.y > player.y) this.dy = GAME.coin.speed;
-        else if (this.y < player.y) this.dy = -GAME.coin.speed;
+        if (this.y > player.y) this.dy = GAME.coin.runningSpeed;
+        else if (this.y < player.y) this.dy = -GAME.coin.runningSpeed;
         else this.dy = 0;
       } else {
-        if (this.dx > 0 && Math.random() < 0.1) {
-          if (Math.random() < 0.5) this.dx = -GAME.coin.speed;
+        if (this.dx > 0 && Math.random() < 0.01) {
+          if (Math.random() < 0.5) this.dx = -GAME.coin.walkingSpeed;
           else this.dx = 0;
-        } else if (this.dx < 0 && Math.random() < 0.1) {
-          if (Math.random() < 0.5) this.dx = GAME.coin.speed;
+        } else if (this.dx < 0 && Math.random() < 0.01) {
+          if (Math.random() < 0.5) this.dx = GAME.coin.walkingSpeed;
           else this.dx = 0;
-        } else if (Math.random() < 0.1) {
-          if (Math.random() < 0.5) this.dx = GAME.coin.speed;
-          else this.dx = -GAME.coin.speed;
+        } else if (Math.random() < 0.01) {
+          if (Math.random() < 0.5) this.dx = GAME.coin.walkingSpeed;
+          else this.dx = -GAME.coin.walkingSpeed;
         }
-        if (this.dy > 0 && Math.random() < 0.1) {
-          if (Math.random() < 0.5) this.dy = -GAME.coin.speed;
+        if (this.dy > 0 && Math.random() < 0.01) {
+          if (Math.random() < 0.5) this.dy = -GAME.coin.walkingSpeed;
           else this.dy = 0;
-        } else if (this.dy < 0 && Math.random() < 0.1) {
-          if (Math.random() < 0.5) this.dy = GAME.coin.speed;
+        } else if (this.dy < 0 && Math.random() < 0.01) {
+          if (Math.random() < 0.5) this.dy = GAME.coin.walkingSpeed;
           else this.dy = 0;
-        } else if (Math.random() < 0.1) {
-          if (Math.random() < 0.5) this.dy = GAME.coin.speed;
-          else this.dy = -GAME.coin.speed;
+        } else if (Math.random() < 0.01) {
+          if (Math.random() < 0.5) this.dy = GAME.coin.walkingSpeed;
+          else this.dy = -GAME.coin.walkingSpeed;
         }
       }
       this.x += this.dx;
@@ -106,8 +108,10 @@ Crafty.c('PlayerCharacter', {
       .onHit('Coin', this.collectCoin).onHit('Enemy', this.hitEnemy)
       .color('rgb(0, 0, ' + this.hp + ')')
       .bind('EnterFrame', function() {
-      if (this.isDown(Crafty.keys.UP_ARROW)) this.v += GAME.dv;
-      else if (this.isDown(Crafty.keys.DOWN_ARROW)) this.v -= GAME.dv;
+      if (this.isDown(Crafty.keys.UP_ARROW) || this.isDown(Crafty.keys.PERIOD))
+        this.v += GAME.dv;
+      else if (this.isDown(Crafty.keys.DOWN_ARROW) || this.isDown(Crafty.keys.COMMA))
+        this.v -= GAME.dv;
       else if (this.v > 0) this.v = Math.max(this.v-GAME.friction, 0);
       else if (this.v < 0) this.v = Math.min(this.v+GAME.friction, 0);
       this.v = Math.max(Math.min(this.v, GAME.maxv), GAME.minv);
@@ -127,6 +131,9 @@ Crafty.c('PlayerCharacter', {
   collectCoin: function(data) {
     for (var i=0; i<data.length; ++i) {
       if (data[i].obj.color() == 'yellow') {
+        Crafty.audio.play('splat');
+        if (Math.random() < 0.5)
+          Crafty.audio.play('coin' + getRandomInt(1, 2));
         data[i].obj.color('orange');
         ++this.collected;
         --this.coinsRemaining;
@@ -136,6 +143,7 @@ Crafty.c('PlayerCharacter', {
   },
 
   hitEnemy: function(data) {
+    Crafty.audio.play('enemy' + getRandomInt(1, 2));
     this.rotation -= this.turningDirection * GAME.dtheta;
     this.x -= Math.sin(this._rotation * Math.PI/180) * this.v;
     this.y += Math.cos(this._rotation * Math.PI/180) * this.v;
@@ -157,7 +165,9 @@ Crafty.c('PlayerCharacter', {
 Crafty.scene('Loading', function() {
   Crafty.e('2D, DOM, Text')
     .text('Loading; please wait...');
-  Crafty.audio.add('bg', 'bg.mp3');
+  Crafty.audio.add({bg: ['bg.mp3'], splat: ['splat.mp3'],
+    coin1: ['coin1.mp3'], coin2: ['coin2.mp3'],
+    enemy1: ['enemy1.mp3'], enemy2: ['enemy2.mp3']});
   Crafty.audio.play('bg', -1);
   Crafty.scene('Game');
 });
@@ -201,10 +211,12 @@ Crafty.scene('Game', function() {
 });
 
 Crafty.scene('Victory', function() {
+  ++difficulty;
   Crafty.scene('Game');
 });
 
 Crafty.scene('Defeat', function() {
+  difficulty = 1;
   Crafty.scene('Game');
 });
 
