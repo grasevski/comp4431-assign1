@@ -114,7 +114,7 @@ Crafty.c('PlayerCharacter', {
       .origin('center')
       .requires('Collision')
       .onHit('Coin', this.collectCoin).onHit('Enemy', this.hitEnemy)
-      .color('rgb(0, 0, ' + this.hp + ')')
+      .color('rgb(0, 0, ' + 2*this.hp + ')')
       .bind('EnterFrame', function() {
       if (this.isDown(Crafty.keys.UP_ARROW) || this.isDown(Crafty.keys.PERIOD))
         this.v += GAME.dv();
@@ -158,13 +158,13 @@ Crafty.c('PlayerCharacter', {
     this.hp -= Math.ceil(Math.abs(this.v));
     this.v *= -GAME.decay();
     this.hp = Math.max(this.hp, 0);
-    this.color('rgb(0, 0, ' + this.hp + ')');
+    this.color('rgb(0, 0, ' + 2*this.hp + ')');
     if (!this.hp) Crafty.scene('Defeat');
   },
 
   resetHp: function() {
     this.hp = 100;
-    this.color('rgb(0, 0, ' + this.hp + ')');
+    this.color('rgb(0, 0, ' + 2*this.hp + ')');
   }
 });
 
