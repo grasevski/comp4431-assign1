@@ -1,26 +1,33 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <title>Michael Caine Racing</title>
+    <title>Fatman</title>
     <script type="text/javascript" src="http://cdn.craftycomponents.com/crafty-release.js"></script>
   </head>
   <body>
     <script type="text/javascript">
-// Constants
-var GAME = {width: 480,
-            height: 320,
-            dv: 0.1,
-            maxv: 2,
-            minv: -1,
-            dtheta: 3,
-            friction: 0.1,
-            decay: 0.1,
-            coin: {threshold: 5555, walkingSpeed: 0.2, runningSpeed: 0.4},
-            enemy: {width: 10, height: 10}};
-
 // Globals
 var player;
 var difficulty = 1;
+var timer;
+
+
+// Constants
+var GAME = {width: 480,
+            height: 320,
+            dv: function() {return 0.1}, 
+            maxv: function() {return difficulty*2},
+            minv: function() {return difficulty*-1},
+            dtheta: function() {return 3},
+            friction: function() {return 0.1},
+            decay: function() {return 0.1},
+            numCoin: function() {return difficulty*20},
+            numEnemy: function() {return difficulty*5},
+            coin: {threshold: function() {return difficulty*5555;},
+                   walkingSpeed: function() {return difficulty*0.2},
+                   runningSpeed: function() {return difficulty*0.4}},
+            enemy: {width: 10, height: 10}};
+
 
 // Helpers
 function getRandomArbitrary(min, max) {
@@ -30,6 +37,7 @@ function getRandomArbitrary(min, max) {
 function getRandomInt(min, max) {
   return Math.floor(Math.random() * (max - min + 1)) + min;
 }
+
 
 // Components
 Crafty.c('Actor', {
@@ -46,33 +54,33 @@ Crafty.c('Coin', {
       .color('yellow')
       .bind('EnterFrame', function() {
       if (this.color() == 'orange') return;
-      if (Math.pow(player.x - this.x, 2) + Math.pow(player.y - this.y, 2) < GAME.coin.threshold) {
-        if (this.x > player.x) this.dx = GAME.coin.runningSpeed;
-        else if (this.x < player.x) this.dx = -GAME.coin.runningSpeed;
+      if (Math.pow(player.x - this.x, 2) + Math.pow(player.y - this.y, 2) < GAME.coin.threshold()) {
+        if (this.x > player.x) this.dx = GAME.coin.runningSpeed();
+        else if (this.x < player.x) this.dx = -GAME.coin.runningSpeed();
         else this.dx = 0;
-        if (this.y > player.y) this.dy = GAME.coin.runningSpeed;
-        else if (this.y < player.y) this.dy = -GAME.coin.runningSpeed;
+        if (this.y > player.y) this.dy = GAME.coin.runningSpeed();
+        else if (this.y < player.y) this.dy = -GAME.coin.runningSpeed();
         else this.dy = 0;
       } else {
         if (this.dx > 0 && Math.random() < 0.01) {
-          if (Math.random() < 0.5) this.dx = -GAME.coin.walkingSpeed;
+          if (Math.random() < 0.5) this.dx = -GAME.coin.walkingSpeed();
           else this.dx = 0;
         } else if (this.dx < 0 && Math.random() < 0.01) {
-          if (Math.random() < 0.5) this.dx = GAME.coin.walkingSpeed;
+          if (Math.random() < 0.5) this.dx = GAME.coin.walkingSpeed();
           else this.dx = 0;
         } else if (Math.random() < 0.01) {
-          if (Math.random() < 0.5) this.dx = GAME.coin.walkingSpeed;
-          else this.dx = -GAME.coin.walkingSpeed;
+          if (Math.random() < 0.5) this.dx = GAME.coin.walkingSpeed();
+          else this.dx = -GAME.coin.walkingSpeed();
         }
         if (this.dy > 0 && Math.random() < 0.01) {
-          if (Math.random() < 0.5) this.dy = -GAME.coin.walkingSpeed;
+          if (Math.random() < 0.5) this.dy = -GAME.coin.walkingSpeed();
           else this.dy = 0;
         } else if (this.dy < 0 && Math.random() < 0.01) {
-          if (Math.random() < 0.5) this.dy = GAME.coin.walkingSpeed;
+          if (Math.random() < 0.5) this.dy = GAME.coin.walkingSpeed();
           else this.dy = 0;
         } else if (Math.random() < 0.01) {
-          if (Math.random() < 0.5) this.dy = GAME.coin.walkingSpeed;
-          else this.dy = -GAME.coin.walkingSpeed;
+          if (Math.random() < 0.5) this.dy = GAME.coin.walkingSpeed();
+          else this.dy = -GAME.coin.walkingSpeed();
         }
       }
       this.x += this.dx;
@@ -109,12 +117,12 @@ Crafty.c('PlayerCharacter', {
       .color('rgb(0, 0, ' + this.hp + ')')
       .bind('EnterFrame', function() {
       if (this.isDown(Crafty.keys.UP_ARROW) || this.isDown(Crafty.keys.PERIOD))
-        this.v += GAME.dv;
+        this.v += GAME.dv();
       else if (this.isDown(Crafty.keys.DOWN_ARROW) || this.isDown(Crafty.keys.COMMA))
-        this.v -= GAME.dv;
-      else if (this.v > 0) this.v = Math.max(this.v-GAME.friction, 0);
-      else if (this.v < 0) this.v = Math.min(this.v+GAME.friction, 0);
-      this.v = Math.max(Math.min(this.v, GAME.maxv), GAME.minv);
+        this.v -= GAME.dv();
+      else if (this.v > 0) this.v = Math.max(this.v-GAME.friction(), 0);
+      else if (this.v < 0) this.v = Math.min(this.v+GAME.friction(), 0);
+      this.v = Math.max(Math.min(this.v, GAME.maxv()), GAME.minv());
       this.x += Math.sin(this._rotation * Math.PI/180) * this.v;
       this.y -= Math.cos(this._rotation * Math.PI/180) * this.v;
       if (this.v == 0) this.turningDirection = 0;
@@ -124,7 +132,7 @@ Crafty.c('PlayerCharacter', {
         this.turningDirection = 1;
       else this.turningDirection = 0;
       if (this.v < 0) this.turningDirection *= -1;
-      this.rotation = (this.rotation + this.turningDirection*GAME.dtheta) % 360;
+      this.rotation = (this.rotation + this.turningDirection*GAME.dtheta()) % 360;
     });
   },
 
@@ -144,11 +152,11 @@ Crafty.c('PlayerCharacter', {
 
   hitEnemy: function(data) {
     Crafty.audio.play('enemy' + getRandomInt(1, 2));
-    this.rotation -= this.turningDirection * GAME.dtheta;
+    this.rotation -= this.turningDirection * GAME.dtheta();
     this.x -= Math.sin(this._rotation * Math.PI/180) * this.v;
     this.y += Math.cos(this._rotation * Math.PI/180) * this.v;
     this.hp -= Math.ceil(Math.abs(this.v));
-    this.v *= -GAME.decay;
+    this.v *= -GAME.decay();
     this.hp = Math.max(this.hp, 0);
     this.color('rgb(0, 0, ' + this.hp + ')');
     if (!this.hp) Crafty.scene('Defeat');
@@ -166,6 +174,7 @@ Crafty.scene('Loading', function() {
   Crafty.e('2D, DOM, Text')
     .text('Loading; please wait...');
   Crafty.audio.add({bg: ['bg.mp3'], splat: ['splat.mp3'],
+    victory: ['victory.mp3'], defeat: ['defeat.mp3'],
     coin1: ['coin1.mp3'], coin2: ['coin2.mp3'],
     enemy1: ['enemy1.mp3'], enemy2: ['enemy2.mp3']});
   Crafty.audio.play('bg', -1);
@@ -190,7 +199,7 @@ Crafty.scene('Game', function() {
   player.attr({x: getRandomInt(xmin, xmax - player.w),
                y: getRandomInt(ymin, ymax - player.h)});
   player.resetHp();
-  numActors = 44;
+  numActors = GAME.numCoin();
   for (var i=0; i<numActors; ++i) {
     var e = Crafty.e('Coin')
       .attr({x: getRandomInt(xmin, xmax),
@@ -200,7 +209,7 @@ Crafty.scene('Game', function() {
     else ++numCoins;
   }
   player.attr({coinsRemaining: numCoins});
-  numActors /= 8;
+  numActors = GAME.numEnemy();
   for (var i=0; i<numActors; ++i) {
     var e = Crafty.e('Enemy')
       .attr({x: getRandomInt(xmin, xmax),
@@ -208,22 +217,36 @@ Crafty.scene('Game', function() {
     if (e.hit('Coin') || e.hit('Enemy') || e.hit('PlayerCharacter'))
       e.destroy();
   }
+  var remaining = 60;
+  var t = Crafty.e('2D, DOM, Text');
+  clearInterval(timer);
+  timer = setInterval(function() {
+    t.text(--remaining)
+      .css({'font-size': ((70-remaining)*255/70) + 'px',
+            'color': 'rgb(' + ((60-remaining)*255/60) + ', 0, 0)'});
+    if (!remaining) {
+      clearInterval(timer);
+      Crafty.scene('Defeat');
+    }
+  }, 1000);
 });
 
 Crafty.scene('Victory', function() {
   ++difficulty;
-  Crafty.scene('Game');
+  Crafty.audio.play('victory');
+  setTimeout(function() {Crafty.scene('Game');}, 2000);
 });
 
 Crafty.scene('Defeat', function() {
   difficulty = 1;
-  Crafty.scene('Game');
+  Crafty.audio.play('defeat');
+  setTimeout(function() {Crafty.scene('Game');}, 5000);
 });
 
 
 // Game
 Crafty.init(GAME.width, GAME.height);
-Crafty.background('green');
+Crafty.background('url(bg.png)');
 Crafty.scene('Loading');
     </script>
   </body>
