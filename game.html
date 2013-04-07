@@ -233,14 +233,20 @@ Crafty.scene('Game', function() {
 
 Crafty.scene('Victory', function() {
   ++difficulty;
-  Crafty.audio.play('victory');
-  setTimeout(function() {Crafty.scene('Game');}, 2000);
+  Crafty.e('2D, DOM, Image').image('victory.png');
+  setTimeout(function() {
+    Crafty.audio.play('victory');
+    setTimeout(function() {Crafty.scene('Game');}, 2000);
+  }, 2000);
 });
 
 Crafty.scene('Defeat', function() {
   difficulty = 1;
-  Crafty.audio.play('defeat');
-  setTimeout(function() {Crafty.scene('Game');}, 5000);
+  Crafty.e('2D, DOM, Image').image('defeat.png');
+  setTimeout(function() {
+    Crafty.audio.play('defeat');
+    setTimeout(function() {Crafty.scene('Game');}, 5000);
+  }, 5000);
 });
 
 
