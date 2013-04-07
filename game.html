@@ -16,16 +16,16 @@ var timer;
 var GAME = {width: 480,
             height: 320,
             dv: function() {return 0.1}, 
-            maxv: function() {return difficulty*2},
-            minv: function() {return difficulty*-1},
+            maxv: function() {return 2},
+            minv: function() {return -1},
             dtheta: function() {return 3},
             friction: function() {return 0.1},
             decay: function() {return 0.1},
-            numCoin: function() {return difficulty*20},
-            numEnemy: function() {return difficulty*5},
-            coin: {threshold: function() {return difficulty*5555;},
-                   walkingSpeed: function() {return difficulty*0.2},
-                   runningSpeed: function() {return difficulty*0.4}},
+            numCoin: function() {return difficulty*10},
+            numEnemy: function() {return difficulty},
+            coin: {threshold: function() {return 5555;},
+                   walkingSpeed: function() {return 0.2},
+                   runningSpeed: function() {return 0.4}},
             enemy: {width: 10, height: 10}};
 
 
